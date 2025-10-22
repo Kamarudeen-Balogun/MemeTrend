@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "Farcaster account association",
+    "payload": "To use MemeTrend, you must prove you control the Farcaster account. This request will not trigger a blockchain transaction or cost any gas fees.",
+    "version": 1
+  },
+  "frame": {
+    "version": "1",
+    "name": "MemeTrend",
+    "iconUrl": "https://meme-trend.vercel.app/icon.png",
+    "splashImageUrl": "https://meme-trend.vercel.app/splash.png",
+    "splashBackgroundColor": "#071024",
+    "homeUrl": "https://meme-trend.vercel.app/",
+    "webhookUrl": "https://meme-trend.vercel.app/api/webhook"
+  },
+  "miniApp": {
+    "version": "1",
+    "name": "MemeTrend",
+    "description": "Track real-time trending cryptocurrency tokens across multiple blockchains",
+    "iconUrl": "https://meme-trend.vercel.app/icon.png",
+    "splashImageUrl": "https://meme-trend.vercel.app/splash.png",
+    "splashBackgroundColor": "#071024",
+    "url": "https://meme-trend.vercel.app/",
+    "termsOfServiceUrl": "https://meme-trend.vercel.app/terms",
+    "privacyPolicyUrl": "https://meme-trend.vercel.app/privacy",
+    "permissions": [
+      "notifications"
+    ]
+  }
+}
