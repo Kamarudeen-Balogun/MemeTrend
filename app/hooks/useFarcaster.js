@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { sdk } from '@farcaster/miniapp-sdk';
 
 export function useFarcaster() {
   const [isFarcaster, setIsFarcaster] = useState(false);
@@ -10,15 +9,24 @@ export function useFarcaster() {
     const initializeFarcaster = async () => {
       try {
         // Check if we're in a Farcaster environment
-        if (typeof window !== 'undefined' && window.self !== window.top) {
+        const inFarcaster = typeof window !== 'undefined' && 
+                           (window.self !== window.top || 
+                            navigator.userAgent.includes('Farcaster') ||
+                            document.referrer.includes('farcaster'));
+        
+        if (inFarcaster) {
           setIsFarcaster(true);
+          
+          // Dynamically import the SDK to avoid SSR issues
+          const { sdk } = await import('@farcaster/miniapp-sdk');
           
           // Initialize the SDK
           await sdk.actions.ready();
-          console.log('Farcaster SDK ready');
+          console.log('Farcaster SDK ready - splash screen should hide');
           setIsReady(true);
         } else {
-          // Not in Farcaster, mark as ready anyway
+          // Not in Farcaster, mark as ready immediately
+          console.log('Not in Farcaster environment');
           setIsReady(true);
         }
       } catch (error) {

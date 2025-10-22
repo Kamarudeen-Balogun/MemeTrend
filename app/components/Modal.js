@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { getBaseTokenFromPool, formatNumber, formatPrice, getChangePercentage } from '@/lib/utils';
-import { sdk } from '@farcaster/miniapp-sdk';
 
 export default function Modal({ token, included, state, onClose }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -24,9 +23,11 @@ export default function Modal({ token, included, state, onClose }) {
 
   useEffect(() => {
     // Check if running in Farcaster environment
-    if (typeof window !== 'undefined' && window.self !== window.top) {
-      setIsFarcaster(true);
-    }
+    const inFarcaster = typeof window !== 'undefined' && 
+                       (window.self !== window.top || 
+                        navigator.userAgent.includes('Farcaster') ||
+                        document.referrer.includes('farcaster'));
+    setIsFarcaster(inFarcaster);
 
     document.body.style.overflow = 'hidden';
     return () => {
@@ -51,11 +52,26 @@ export default function Modal({ token, included, state, onClose }) {
     
     try {
       // Use Farcaster share API if available
-      if (isFarcaster && sdk.actions.share) {
-        await sdk.actions.share({
-          text: shareText,
-          url: window.location.href
-        });
+      if (isFarcaster) {
+        try {
+          const { sdk } = await import('@farcaster/miniapp-sdk');
+          await sdk.actions.share({
+            text: shareText,
+            url: window.location.href
+          });
+        } catch (sdkError) {
+          // Fallback to regular share if SDK fails
+          if (navigator.share) {
+            await navigator.share({
+              title: `${name} - MemeTrend`,
+              text: shareText,
+              url: window.location.href,
+            });
+          } else {
+            await navigator.clipboard.writeText(shareText);
+            alert('Token info copied to clipboard!');
+          }
+        }
       } else if (navigator.share) {
         // Fallback to regular share
         await navigator.share({
@@ -110,6 +126,7 @@ export default function Modal({ token, included, state, onClose }) {
           </div>
         </div>
 
+        {/* Rest of your modal content remains the same */}
         <div className="modal-body">
           <div className="left-col">
             <div className="info-card overview-card">
