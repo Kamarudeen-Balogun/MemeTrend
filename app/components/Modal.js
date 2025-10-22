@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getBaseTokenFromPool, formatNumber, formatPrice, getChangePercentage } from '@/lib/utils';
+import { getBaseTokenFromPool, formatNumber, formatPrice, getChangePercentage } from '../../lib/utils';
 
 export default function Modal({ token, included, state, onClose }) {
   const [activeTab, setActiveTab] = useState('overview');
