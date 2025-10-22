@@ -1,9 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getBaseTokenFromPool, formatNumber, formatPrice, getChangePercentage } from '../../lib/utils';
+import { getBaseTokenFromPool, formatNumber, formatPrice, getChangePercentage } from '@/lib/utils';
+import { sdk } from '@farcaster/miniapp-sdk';
 
 export default function Modal({ token, included, state, onClose }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isFarcaster, setIsFarcaster] = useState(false);
   
   const attrs = token.attributes || {};
   const base = getBaseTokenFromPool(token, included);
@@ -21,6 +23,11 @@ export default function Modal({ token, included, state, onClose }) {
   const poolAddr = attrs.address || attrs.pool_address || token.address || token.id || '';
 
   useEffect(() => {
+    // Check if running in Farcaster environment
+    if (typeof window !== 'undefined' && window.self !== window.top) {
+      setIsFarcaster(true);
+    }
+
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
@@ -39,6 +46,33 @@ export default function Modal({ token, included, state, onClose }) {
     if (e.target === e.currentTarget) onClose();
   };
 
+  const shareToFarcaster = async () => {
+    const shareText = `📈 ${name} is trending on ${state.chain}!\nPrice: ${formatPrice(priceUsd)}\n24h Change: ${change24 >= 0 ? '+' : ''}${change24.toFixed(1)}%\n\nCheck it out on MemeTrend: ${window.location.origin}`;
+    
+    try {
+      // Use Farcaster share API if available
+      if (isFarcaster && sdk.actions.share) {
+        await sdk.actions.share({
+          text: shareText,
+          url: window.location.href
+        });
+      } else if (navigator.share) {
+        // Fallback to regular share
+        await navigator.share({
+          title: `${name} - MemeTrend`,
+          text: shareText,
+          url: window.location.href,
+        });
+      } else {
+        // Copy to clipboard as last resort
+        await navigator.clipboard.writeText(shareText);
+        alert('Token info copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+    }
+  };
+
   return (
     <div 
       id="modal-overlay" 
@@ -55,6 +89,19 @@ export default function Modal({ token, included, state, onClose }) {
           </div>
 
           <div className="modal-actions">
+            {/* Share Button */}
+            <button 
+              onClick={shareToFarcaster} 
+              className="icon-btn" 
+              title="Share to Farcaster"
+              aria-label="Share to Farcaster"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 8L22 4M22 4L18 8M22 4V16C22 17.1046 21.1046 18 20 18H12M6 8L2 12M2 12L6 16M2 12H14" 
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
             <button onClick={onClose} className="icon-btn" title="Close" aria-label="Close dialog">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

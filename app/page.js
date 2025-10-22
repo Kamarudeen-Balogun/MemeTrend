@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import TokenList from './components/TokenList';
 import Modal from './components/Modal';
 import Filters from './components/Filters';
+import { useFarcaster } from './hooks/useFarcaster';
 
 export default function Home() {
   const [state, setState] = useState({ chain: 'solana', time: '1h' });
@@ -12,7 +13,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [theme, setTheme] = useState('dark');
-  const [isFarcaster, setIsFarcaster] = useState(false);
+  
+  // Use Farcaster hook
+  const { isFarcaster, isReady } = useFarcaster();
 
   useEffect(() => {
     // Apply saved theme
@@ -26,19 +29,11 @@ export default function Home() {
       document.body.className = prefersLight ? 'theme-light' : '';
     }
 
-    // Detect Farcaster environment for optimizations
-    if (typeof window !== 'undefined') {
-      const inFarcaster = window.self !== window.top || 
-                         navigator.userAgent.includes('Farcaster') ||
-                         document.referrer.includes('farcaster');
-      setIsFarcaster(inFarcaster);
-      
-      // Apply Farcaster-specific optimizations
-      if (inFarcaster) {
-        document.documentElement.style.setProperty('--glass-blur', '4px');
-      }
+    // Apply Farcaster-specific optimizations
+    if (isFarcaster) {
+      document.documentElement.style.setProperty('--glass-blur', '4px');
     }
-  }, []);
+  }, [isFarcaster]);
 
   useEffect(() => {
     fetchData();
@@ -74,6 +69,26 @@ export default function Home() {
   const updateFilter = (type, value) => {
     setState(prev => ({ ...prev, [type]: value }));
   };
+
+  // Show loading until Farcaster SDK is ready
+  if (!isReady) {
+    return (
+      <div className="app">
+        <div className="glass" style={{ 
+          textAlign: 'center', 
+          padding: '40px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '50vh'
+        }}>
+          <div style={{ fontSize: '24px', marginBottom: '20px' }}>🚀</div>
+          <div>Loading MemeTrend...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
